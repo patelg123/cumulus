@@ -1,7 +1,6 @@
 {
   "root": true,
   "plugins": [
-    "jsdoc",
     "import",
     "jsdoc",
     "lodash",
