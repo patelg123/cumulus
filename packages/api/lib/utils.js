@@ -41,18 +41,6 @@ function parseException(exception) {
 }
 
 /**
- * Returns the collectionId used in elasticsearch
- * which is a combination of collection name and version
- *
- * @param {string} name - collection name
- * @param {string} version - collection version
- * @returns {string} collectionId
- */
-function constructCollectionId(name, version) {
-  return `${name}___${version}`;
-}
-
-/**
  * Returns the name and version of a collection based on
  * the collectionId used in elasticsearch indexing
  *
@@ -103,7 +91,6 @@ function getGranuleProductVolume(granuleFiles) {
 module.exports.sleep = sleep;
 module.exports.errorify = errorify;
 module.exports.parseException = parseException;
-module.exports.constructCollectionId = constructCollectionId;
 module.exports.deconstructCollectionId = deconstructCollectionId;
 module.exports.extractDate = extractDate;
 module.exports.getGranuleProductVolume = getGranuleProductVolume;

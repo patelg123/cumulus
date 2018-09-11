@@ -2,16 +2,25 @@
   "root": true,
   "plugins": [
     "jsdoc",
-    "lodash"
+    "import",
+    "jsdoc",
+    "lodash",
+    "node",
+    "unicorn"
   ],
   "extends": [
     "airbnb",
-    "plugin:lodash/recommended"
+    "plugin:import/errors",
+    "plugin:import/warnings",
+    "plugin:lodash/recommended",
+    "plugin:node/recommended",
+    "plugin:unicorn/recommended"
   ],
   "parser": "babel-eslint",
   "env": {
-    "node": true,
-    "mocha": true
+    "jasmine": true,
+    "mocha": true,
+    "node": true
   },
   "rules": {
     "indent": [ "error", 2 ],
@@ -94,6 +103,9 @@
 
     "lodash/import-scope": ["warn", "method-package"],
     "lodash/prefer-constant": ["warn", false],
-    "lodash/prefer-lodash-method": "off"
+    "lodash/prefer-lodash-method": "off",
+
+    "unicorn/filename-case": "off",
+    "unicorn/prefer-spread": "off"
   }
 }

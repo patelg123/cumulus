@@ -53,7 +53,7 @@ function resp(context, err, bodyArg, statusArg = null, headers = {}) { // eslint
   deprecate('resp(), use getAuthorizationFailureResponse() and buildLambdaProxyResponse() instead,'); // eslint-disable-line max-len
 
   if (!isFunction(context.succeed)) {
-    throw new Error('context as object with succeed method not provided');
+    throw new TypeError('context as object with succeed method not provided');
   }
 
   let body = bodyArg;
@@ -247,7 +247,7 @@ async function getAuthorizationFailureResponse(params) {
 
 function handle(event, context, authCheck, func) {
   if (!isFunction(context.succeed)) {
-    throw new Error('context object with succeed method not provided');
+    throw new TypeError('context object with succeed method not provided');
   }
 
   const cb = resp.bind(null, context);

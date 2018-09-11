@@ -17,7 +17,8 @@ const zlib = require('zlib');
 const log = require('@cumulus/common/log');
 const { inTestMode } = require('@cumulus/common/test-utils');
 const { Search, defaultIndexAlias } = require('./search');
-const { constructCollectionId, deconstructCollectionId } = require('../lib/utils');
+const { constructCollectionId } = require('@cumulus/common');
+const { deconstructCollectionId } = require('../lib/utils');
 const { Granule, Pdr, Execution } = require('../models');
 
 /**
