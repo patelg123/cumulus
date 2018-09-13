@@ -1,3 +1,5 @@
+/** @module */
+
 'use strict';
 
 /* eslint-disable no-console */

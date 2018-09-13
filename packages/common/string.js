@@ -1,3 +1,6 @@
+/** @module */
+
+'use strict';
 
 /**
  * Given a character, replaces the JS unicode-escape sequence for the character

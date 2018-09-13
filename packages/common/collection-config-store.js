@@ -1,3 +1,5 @@
+/** @module */
+
 'use strict';
 
 const { s3 } = require('./aws');

@@ -1,3 +1,7 @@
+/** @module */
+
+'use strict';
+
 /**
  * Creates a new error type with the given name and parent class. Sets up
  * boilerplate necessary to successfully subclass Error and preserve stack trace

@@ -1,3 +1,5 @@
+/** @module */
+
 'use strict';
 
 const http = require('follow-redirects').http;

@@ -1,3 +1,7 @@
+/** @module */
+
+'use strict';
+
 const aws = require('./aws');
 const log = require('./log');
 

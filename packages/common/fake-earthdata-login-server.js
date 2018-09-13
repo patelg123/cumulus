@@ -1,3 +1,5 @@
+/** @module */
+
 'use strict';
 
 const formidable = require('formidable');

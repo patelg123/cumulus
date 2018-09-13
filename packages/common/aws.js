@@ -1,3 +1,8 @@
+/**
+ * A library of utility functions for working with AWS in Cumulus.
+ * @module
+ */
+
 'use strict';
 
 const AWS = require('aws-sdk');
@@ -10,7 +15,6 @@ const url = require('url');
 const log = require('./log');
 const string = require('./string');
 const { inTestMode, randomString, testAwsClient } = require('./test-utils');
-const promiseRetry = require('promise-retry');
 const pump = require('pump');
 
 /**
@@ -18,6 +22,7 @@ const pump = require('pump');
  *
  * @param {...string|Array<string>} args - the strings to join
  * @returns {string} the full S3 key
+ * @alias module:aws.s3Join
  */
 function s3Join(...args) {
   const tokens = Array.isArray(args[0]) ? args[0] : args;
@@ -65,8 +70,9 @@ const memoize = (fn) => {
  *       instance of each service object per process.
  *
  * @param {Function} Service - an AWS service object constructor function
- * @param {string} version - the API version to use
- * @returns {Function} - a function which, when called, will return an AWS service object
+ * @param {string} [version=null] - the API version to use
+ * @returns {Function} a function which, when called, will return an AWS service object
+ * @private
  */
 const awsClient = (Service, version = null) => {
   const options = {};
@@ -81,25 +87,205 @@ const awsClient = (Service, version = null) => {
   return memoize((o) => new Service(Object.assign(options, o)));
 };
 
+/**
+ * Returns a function which, when invoked, will return an [AWS ECS service object](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/ECS.html)
+ *
+ * The result of calling this function is memoized.  That means that, every time
+ * this this function is invoked, it will return the same service object.
+ *
+ * When run in test mode (with NODE_ENV=test), the returned client will be
+ * configured to connect to Localstack instead of AWS.
+ *
+ * @returns {Function} an ECS client factory
+ * @kind function
+ *
+ * @example
+ * const aws = require('@cumulus/common/aws');
+ *
+ * const ecsClient = aws.ecs();
+ * ecsClient.listClusters({}, (err, data) => console.log(data.clusterArns));
+ */
 exports.ecs = awsClient(AWS.ECS, '2014-11-13');
+
+/**
+ * Returns a function which, when invoked, will return an [AWS S3 service object](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html)
+ *
+ * The result of calling this function is memoized.  That means that, every time
+ * this this function is invoked, it will return the same service object.
+ *
+ * When run in test mode (with NODE_ENV=test), the returned client will be
+ * configured to connect to Localstack instead of AWS.
+ *
+ * @returns {Function} an S3 client factory
+ * @kind function
+ *
+ * @example
+ * const aws = require('@cumulus/common/aws');
+ *
+ * const s3Client = aws.s3();
+ * s3Client.listBuckets({}, (err, data) => console.log(data.Buckets));
+ */
 exports.s3 = awsClient(AWS.S3, '2006-03-01');
+
+/**
+ * Returns a function which, when invoked, will return an [AWS Lambda service object](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Lambda.html)
+ *
+ * The result of calling this function is memoized.  That means that, every time
+ * this this function is invoked, it will return the same service object.
+ *
+ * When run in test mode (with NODE_ENV=test), the returned client will be
+ * configured to connect to Localstack instead of AWS.
+ *
+ * @returns {Function} a Lambda client factory
+ * @kind function
+ *
+ * @example
+ * const aws = require('@cumulus/common/aws');
+ *
+ * const lambdaClient = aws.ecs();
+ * lambdaClient.listFunctions({}, (err, data) => console.log(data.Functions));
+ */
 exports.lambda = awsClient(AWS.Lambda, '2015-03-31');
+
+/**
+ * Returns a function which, when invoked, will return an [AWS SQS service object](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SQS.html)
+ *
+ * The result of calling this function is memoized.  That means that, every time
+ * this this function is invoked, it will return the same service object.
+ *
+ * When run in test mode (with NODE_ENV=test), the returned client will be
+ * configured to connect to Localstack instead of AWS.
+ *
+ * @returns {Function} an SQS client factory
+ * @kind function
+ *
+ * @example
+ * const aws = require('@cumulus/common/aws');
+ *
+ * const sqsClient = aws.sqs();
+ * sqsClient.listQueues({}, (err, data) => console.log(data.QueueUrls));
+ */
 exports.sqs = awsClient(AWS.SQS, '2012-11-05');
+
+/**
+ * Returns a function which, when invoked, will return an [AWS CloudWatchEvents service object](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CloudWatchEvents.html)
+ *
+ * The result of calling this function is memoized.  That means that, every time
+ * this this function is invoked, it will return the same service object.
+ *
+ * When run in test mode (with NODE_ENV=test), the returned client will be
+ * configured to connect to Localstack instead of AWS.
+ *
+ * @returns {Function} a CloudWatchEvents client factory
+ * @kind function
+ */
 exports.cloudwatchevents = awsClient(AWS.CloudWatchEvents, '2014-02-03');
+
+/**
+ * Returns a function which, when invoked, will return an [AWS CloudWatchLogs service object](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CloudWatchLogs.html)
+ *
+ * The result of calling this function is memoized.  That means that, every time
+ * this this function is invoked, it will return the same service object.
+ *
+ * When run in test mode (with NODE_ENV=test), the returned client will be
+ * configured to connect to Localstack instead of AWS.
+ *
+ * @returns {Function} a CloudWatchLogs client factory
+ * @kind function
+ */
 exports.cloudwatchlogs = awsClient(AWS.CloudWatchLogs, '2014-03-28');
+
+/**
+ * Returns a function which, when invoked, will return an [AWS DynamoDB service object](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html)
+ *
+ * The result of calling this function is memoized.  That means that, every time
+ * this this function is invoked, it will return the same service object.
+ *
+ * When run in test mode (with NODE_ENV=test), the returned client will be
+ * configured to connect to Localstack instead of AWS.
+ *
+ * @returns {Function} a DynamoDB client factory
+ * @kind function
+ */
 exports.dynamodb = awsClient(AWS.DynamoDB, '2012-08-10');
+
+/**
+ * Returns a function which, when invoked, will return an [AWS DynamoDBStreams service object](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDBStreams.html)
+ *
+ * The result of calling this function is memoized.  That means that, every time
+ * this this function is invoked, it will return the same service object.
+ *
+ * When run in test mode (with NODE_ENV=test), the returned client will be
+ * configured to connect to Localstack instead of AWS.
+ *
+ * @returns {Function} a DynamoDBStreams client factory
+ * @kind function
+ */
 exports.dynamodbstreams = awsClient(AWS.DynamoDBStreams, '2012-08-10');
+
+/**
+ * Returns a function which, when invoked, will return an [AWS DynamoDB DocumentClient service object](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB/DocumentClient.html)
+ *
+ * The result of calling this function is memoized.  That means that, every time
+ * this this function is invoked, it will return the same service object.
+ *
+ * When run in test mode (with NODE_ENV=test), the returned client will be
+ * configured to connect to Localstack instead of AWS.
+ *
+ * @returns {Function} a DynamoDB DocumentClient client factory
+ * @kind function
+ */
 exports.dynamodbDocClient = awsClient(AWS.DynamoDB.DocumentClient, '2012-08-10');
+
+/**
+ * Returns a function which, when invoked, will return an [AWS StepFunctions service object](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/StepFunctions.html)
+ *
+ * The result of calling this function is memoized.  That means that, every time
+ * this this function is invoked, it will return the same service object.
+ *
+ * When run in test mode (with NODE_ENV=test), the returned client will be
+ * configured to connect to Localstack instead of AWS.
+ *
+ * @returns {Function} a StepFunctions client factory
+ * @kind function
+ */
 exports.sfn = awsClient(AWS.StepFunctions, '2016-11-23');
+
+/**
+ * Returns a function which, when invoked, will return an [AWS CloudFormation service object](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CloudFormation.html)
+ *
+ * The result of calling this function is memoized.  That means that, every time
+ * this this function is invoked, it will return the same service object.
+ *
+ * When run in test mode (with NODE_ENV=test), the returned client will be
+ * configured to connect to Localstack instead of AWS.
+ *
+ * @returns {Function} a CloudFormation client factory
+ * @kind function
+ */
 exports.cf = awsClient(AWS.CloudFormation, '2010-05-15');
+
+/**
+ * Returns a function which, when invoked, will return an [AWS SNS service object](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SNS.html)
+ *
+ * The result of calling this function is memoized.  That means that, every time
+ * this this function is invoked, it will return the same service object.
+ *
+ * When run in test mode (with NODE_ENV=test), the returned client will be
+ * configured to connect to Localstack instead of AWS.
+ *
+ * @returns {Function} a SNS client factory
+ * @kind function
+ */
 exports.sns = awsClient(AWS.SNS, '2010-03-31');
 
 /**
  * Create a DynamoDB table and then wait for the table to exist
  *
- * @param {Object} params - the same params that you would pass to AWS.createTable
- *   See https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html#createTable-property
- * @returns {Promise<Object>} - the output of the createTable call
+ * @param {Object} params - the same params that you would pass to
+ *   [dynamodb.createTable()](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html#createTable-property)
+ * @returns {Promise<Object>} the output of the createTable call
+ * @alias module:aws.createAndWaitForDynamoDbTable
  */
 async function createAndWaitForDynamoDbTable(params) {
   const createTableResult = await exports.dynamodb().createTable(params).promise();
@@ -175,9 +361,9 @@ exports.deleteS3Object = (bucket, key) =>
 /**
  * Test if an object exists in S3
  *
- * @param {Object} params - same params as https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#headObject-property
- * @returns {Promise<boolean>} - a Promise that will resolve to a boolean indicating
- *                               if the object exists
+ * @param {Object} params - same params as [s3.headObject()](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#headObject-property)
+ * @returns {Promise<boolean>} a Promise that will resolve to a boolean
+ *   indicating if the object exists
  */
 exports.s3ObjectExists = (params) =>
   exports.s3().headObject(params).promise()
@@ -221,7 +407,6 @@ exports.downloadS3File = (s3Obj, filepath) => {
 * @param {string} key - key for object (filepath + filename)
 * @returns {Promise} - returns response from `S3.headObject` as a promise
 **/
-
 exports.headObject = (bucket, key) =>
   exports.s3().headObject({ Bucket: bucket, Key: key }).promise();
 
@@ -236,29 +421,23 @@ exports.getS3Object = (bucket, key) =>
   exports.s3().getObject({ Bucket: bucket, Key: key }).promise();
 
 /**
-* Check if a file exists in an S3 object
-*
-* @name fileExists
-* @param {string} bucket - name of the S3 bucket
-* @param {string} key - key of the file in the S3 bucket
-* @returns {Promise} returns the response from `S3.headObject` as a promise
-**/
-exports.fileExists = async (bucket, key) => {
-  const s3 = exports.s3();
-
-  try {
-    const r = await s3.headObject({ Key: key, Bucket: bucket }).promise();
-    return r;
-  }
-  catch (e) {
-    // if file is not return false
-    if (e.stack.match(/(NotFound)/)) {
-      return false;
-    }
-    throw e;
-  }
-};
-
+ * Retrieve metadata about an S3 object
+ *
+ * Because of its unfortunate naming and inconsistent return values, it is recommended that this method not be used.
+ * If you want to check if an object exist in S3, use [aws.s3ObjectExists()]{@link module:aws.s3ObjectExists}.
+ * If you want to fetch metadata about an S3 object, use `aws.s3().headObject()`.
+ *
+ * @param {string} bucket - an S3 bucket
+ * @param {string} key - the key of the S3 object to check
+ * @returns {Promise<Object|boolean>} the result of [s3.headObject()](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#headObject-property) if the object exists or `false` if it does not exist
+ * @deprecated
+ */
+exports.fileExists = (bucket, key) =>
+  exports.s3().headObject({ Key: key, Bucket: bucket }).promise()
+    .catch((err) => {
+      if (err.stack.includes('NotFound')) return false;
+      throw err;
+    });
 
 exports.downloadS3Files = (s3Objs, dir, s3opts = {}) => {
   // Scrub s3Ojbs to avoid errors from the AWS SDK
@@ -374,8 +553,7 @@ exports.uploadS3FileStream = (fileStream, bucket, key, s3opts = {}) => {
  * @param {string} bucket - The name of the bucket
  * @param {string} prefix - Only objects with keys starting with this prefix
  *   will be included (useful for searching folders in buckets, e.g., '/PDR')
- * @param {boolean} skipFolders - If true don't return objects that are folders
- *   (defaults to true)
+ * @param {boolean} [skipFolders=true] - If true don't return objects that are folders
  * @returns {Promise} - A promise that resolves to the list of objects. Each S3
  *   object is represented as a JS object with the following attributes: `Key`,
  * `ETag`, `LastModified`, `Owner`, `Size`, `StorageClass`.
@@ -410,8 +588,9 @@ exports.listS3Objects = (bucket, prefix = null, skipFolders = true) => {
  * https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjectsV2-property
  *
  * @param {Object} params - params for the s3.listObjectsV2 call
- * @returns {Promise<Array>} - resolves to an array of objects corresponding to
+ * @returns {Promise<Array>} resolves to an array of objects corresponding to
  *   the Contents property of the listObjectsV2 response
+ * @alias module:aws.listS3ObjectsV2
  */
 async function listS3ObjectsV2(params) {
   // Fetch the first list of objects from S3
@@ -427,7 +606,7 @@ async function listS3ObjectsV2(params) {
         params,
         { ContinuationToken: listObjectsResponse.NextContinuationToken }
       )
-    ).promise(); //eslint-disable-line function-paren-newline
+    ).promise();
     discoveredObjects = discoveredObjects.concat(listObjectsResponse.Contents);
   }
 
@@ -591,11 +770,15 @@ exports.parseS3Uri = (uri) => {
 };
 
 /**
- * Given a bucket and key, return an S3 URI
+ * Given a bucket and key, return an `s3://` URI
  *
  * @param {string} bucket - an S3 bucket name
  * @param {string} key - an S3 key
- * @returns {string} - an S3 URI
+ * @returns {string} an S3 URI
+ *
+ * @example
+ * const aws = require('@cumulus/common/aws');
+ * aws.buildS3Uri('my-bucket', 'my/key'); // returns 's3://my-bucket/my/key'
  */
 exports.buildS3Uri = (bucket, key) => `s3://${bucket}/${key.replace(/^\/+/, '')}`;
 
@@ -643,6 +826,7 @@ exports.fromSfnExecutionName = (str, delimiter = '__') =>
  *
  * @param {string} queueName - defaults to a random string
  * @returns {Promise.<string>} the Queue URL
+ * @alias module:aws.createQueue
  */
 async function createQueue(queueName) {
   const actualQueueName = queueName || randomString();
@@ -762,7 +946,6 @@ exports.getGranuleS3Params = (granuleId, stack, bucket) => {
 /**
 * Set the status of a granule
 *
-* @name setGranuleStatus
 * @param {string} granuleId - granule id
 * @param {string} stack - the deployment stackname
 * @param {string} bucket - the deployment bucket name

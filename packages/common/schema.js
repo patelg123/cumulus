@@ -1,3 +1,7 @@
+/** @module */
+
+'use strict';
+
 // Contains helper functions for validating JSON against some of the ingest schemas.
 
 const Ajv = require('ajv');

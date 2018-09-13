@@ -1,3 +1,5 @@
+/** @module */
+
 'use strict';
 
 const aws = require('./aws');

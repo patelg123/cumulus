@@ -1,3 +1,7 @@
+/** @module */
+
+'use strict';
+
 const fs = require('fs');
 const configUtil = require('./config');
 const path = require('path');
