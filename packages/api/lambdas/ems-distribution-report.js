@@ -1,8 +1,9 @@
 'use strict';
 
+const flatten = require('lodash.flatten');
+const pMap = require('p-map');
 const moment = require('moment');
 const { aws } = require('@cumulus/common');
-const { TaskQueue } = require('cwait');
 const { URL } = require('url');
 const {
   aws: {
@@ -197,15 +198,6 @@ async function generateDistributionReport(params) {
     logsPrefix
   } = params;
 
-  // Throttle how many log objects we fetch and parse in parallel
-  const queue = new TaskQueue(Promise, 5);
-  const throttledGetDistributionEventsFromS3Object = queue.wrap(getDistributionEventsFromS3Object);
-
-  // A few utility functions that we'll be using below
-  const flatten = (accumulator, currentValue) => accumulator.concat(currentValue);
-  const timeFilter = (event) => event.time >= reportStartTime && event.time < reportEndTime;
-  const sortByTime = (eventA, eventB) => (eventA.time < eventB.time ? -1 : 1);
-
   // Get the list of S3 objects containing Server Access logs
   const s3Objects = (await aws.listS3ObjectsV2({ Bucket: logsBucket, Prefix: logsPrefix }))
     .map((s3Object) => ({ Bucket: logsBucket, Key: s3Object.Key }));
@@ -213,18 +205,23 @@ async function generateDistributionReport(params) {
   log.info(`Found ${s3Objects} log files in S3`);
 
   // Fetch all distribution events from S3
-  const allDistributionEvents = (await Promise.all(s3Objects.map(
-    throttledGetDistributionEventsFromS3Object
-  ))).reduce(flatten, []);
+  const allDistributionEvents = flatten(await pMap(
+    s3Objects,
+    getDistributionEventsFromS3Object,
+    { concurrency: 5 }
+  ));
 
   log.info(`Found a total of ${allDistributionEvents.length} distribution events`);
 
-  const distributionEventsInReportPeriod = allDistributionEvents.filter(timeFilter);
+  const distributionEventsInReportPeriod = allDistributionEvents
+    .filter((event) => event.time >= reportStartTime && event.time < reportEndTime);
 
   log.info(`Found ${allDistributionEvents.length} distribution events between `
     + `${reportStartTime.toString()} and ${reportEndTime.toString()}`);
 
-  return distributionEventsInReportPeriod.sort(sortByTime).join('\n');
+  return distributionEventsInReportPeriod
+    .sort((eventA, eventB) => (eventA.time < eventB.time ? -1 : 1))
+    .join('\n');
 }
 
 /**
