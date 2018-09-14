@@ -2,16 +2,16 @@
 
 const AWS = require('aws-sdk');
 const cksum = require('cksum');
-const concurrency = require('./concurrency');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const pump = require('pump');
 const url = require('url');
+
+const concurrency = require('./concurrency');
 const log = require('./log');
 const string = require('./string');
 const { inTestMode, randomString, testAwsClient } = require('./test-utils');
-const promiseRetry = require('promise-retry');
-const pump = require('pump');
 
 /**
  * Join strings into an S3 key without a leading slash or double slashes
