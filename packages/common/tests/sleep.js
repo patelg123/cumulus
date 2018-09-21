@@ -10,6 +10,6 @@ test('sleep() resolves after the expected amount of time', async (t) => {
   await sleep(expectedSleepTime);
   const actualSleepTime = Date.now() - startTime;
 
-  t.true(actualSleepTime > expectedSleepTime * 0.75);
-  t.true(actualSleepTime < expectedSleepTime * 1.25);
+  t.true(actualSleepTime > expectedSleepTime * 0.8);
+  t.true(actualSleepTime < expectedSleepTime * 1.2);
 });
