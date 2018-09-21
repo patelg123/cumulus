@@ -94,7 +94,8 @@
       {
         "code": 100,
         "ignorePattern": "(https?:|JSON\\.parse|[Uu]rl =)",
-        "ignoreComments": true
+        "ignoreComments": true,
+        "ignoreStrings": true
       }
     ],
     "arrow-parens": ["error", "always"],

@@ -10,3 +10,4 @@ exports.FakeEarthdataLoginServer = require('./fake-earthdata-login-server');
 exports.sleep = require('./sleep');
 exports.stepFunctions = require('./step-functions');
 exports.stringUtils = require('./string');
+exports.waitForConditionalValue = require('./wait-for-conditional-value');
