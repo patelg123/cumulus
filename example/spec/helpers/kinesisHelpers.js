@@ -6,7 +6,8 @@ const {
   aws: {
     sfn,
     receiveSQSMessages
-  }
+  },
+  waitForConditionalValue
 } = require('@cumulus/common');
 
 const {
@@ -68,25 +69,21 @@ async function getExecutions() {
  * @param {string} streamName - name of kinesis stream to wait for
  * @param {integer} maxNumberElapsedPeriods - number of periods to wait for stream
  *                  default value 30; duration of period is 1000ms
- * @returns {string} current stream status: 'ACTIVE'
- * @throws {Error} - Error describing current stream status
+ * @returns {Promise<string>} current stream status: 'ACTIVE'
  */
-async function waitForActiveStream(streamName, maxNumberElapsedPeriods = 60) {
-  let streamStatus = 'Anything';
-  let elapsedPeriods = 0;
-  let stream;
+function waitForActiveStream(streamName, maxNumberElapsedPeriods = 60) {
+  const getStreamStatus = () =>
+    kinesis.describeStream({ StreamName: streamName }).promise()
+      .then((stream) => stream.StreamDescription.StreamStatus);
 
-  /* eslint-disable no-await-in-loop */
-  while (streamStatus !== 'ACTIVE' && elapsedPeriods < maxNumberElapsedPeriods) {
-    await timeout(waitPeriodMs);
-    stream = await kinesis.describeStream({ StreamName: streamName }).promise();
-    streamStatus = stream.StreamDescription.StreamStatus;
-    elapsedPeriods += 1;
-  }
-  /* eslint-enable no-await-in-loop */
-
-  if (streamStatus === 'ACTIVE') return streamStatus;
-  throw new Error(`Stream never became active:  status: ${streamStatus}`);
+  return waitForConditionalValue(
+    getStreamStatus,
+    (status) => status === 'ACTIVE',
+    {
+      interval: waitPeriodMs,
+      timeout: maxNumberElapsedPeriods * waitPeriodMs
+    }
+  );
 }
 
 /**
@@ -188,26 +185,27 @@ async function putRecordOnStream(streamName, record) {
  * @throws {Error} - any AWS error, re-thrown from AWS execution or 'Workflow Never Started'.
  */
 async function waitForTestSf(recordIdentifier, maxWaitTime, firstStep = 'SfSnsReport') {
-  let timeWaited = 0;
-  let workflowExecution;
-
-  /* eslint-disable no-await-in-loop */
-  while (timeWaited < maxWaitTime && workflowExecution === undefined) {
-    await timeout(waitPeriodMs);
-    timeWaited += waitPeriodMs;
+  const getExecutionOrNull = async () => {
     const executions = await getExecutions();
     // Search all recent executions for target recordIdentifier
     for (const execution of executions) {
       const taskInput = await lambdaStep.getStepInput(execution.executionArn, firstStep);
       if (taskInput !== null && taskInput.payload.identifier === recordIdentifier) {
-        workflowExecution = execution;
-        break;
+        return execution;
       }
     }
-  }
-  /* eslint-disable no-await-in-loop */
-  if (timeWaited < maxWaitTime) return workflowExecution;
-  throw new Error('Never found started workflow.');
+
+    return null;
+  };
+
+  return waitForConditionalValue(
+    getExecutionOrNull,
+    (execution) => execution !== null,
+    {
+      interval: waitPeriodMs,
+      timeout: maxWaitTime
+    }
+  );
 }
 
 /**
@@ -252,20 +250,29 @@ function isTargetMessage(message, recordIdentifier) {
  * @returns {Object} - matched Message from SQS.
  */
 async function waitForQueuedRecord(recordIdentifier, queueUrl, maxNumberElapsedPeriods = 120) {
-  const timeoutInterval = 5000;
-  let queuedRecord;
-  let elapsedPeriods = 0;
-
-  while (!queuedRecord && elapsedPeriods < maxNumberElapsedPeriods) {
+  const getRecordOrNull = async () => {
     const messages = await receiveSQSMessages(queueUrl);
     if (messages.length > 0) {
       const targetMessage = messages.find((message) => isTargetMessage(message, recordIdentifier));
       if (targetMessage) return targetMessage;
     }
-    await timeout(timeoutInterval);
-    elapsedPeriods += 1;
-  }
-  return { waitForQueuedRecord: 'never found record on queue' };
+    return null;
+  };
+
+  return waitForConditionalValue(
+    getRecordOrNull,
+    (record) => record !== null,
+    {
+      interval: 5000,
+      timeout: 5000 * maxNumberElapsedPeriods
+    }
+  )
+    .catch((err) => {
+      if (err.name === 'TimeoutError') {
+        return { waitForQueuedRecord: 'never found record on queue' };
+      }
+      throw err;
+    });
 }
 
 module.exports = {
