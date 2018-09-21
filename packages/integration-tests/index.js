@@ -10,7 +10,8 @@ const {
   aws: { s3, sfn },
   stepFunctions: {
     describeExecution
-  }
+  },
+  waitForConditionalValue
 } = require('@cumulus/common');
 const {
   models: { Provider, Collection, Rule }
@@ -90,25 +91,21 @@ async function getExecutionStatus(executionArn, retryOptions) {
  * @param {string} executionArn - ARN of the execution
  * @param {number} [timeout=600] - the time, in seconds, to wait for the
  *   execution to reach a non-RUNNING state
- * @returns {string} status
+ * @returns {Promise<string>} status
  */
-async function waitForCompletedExecution(executionArn, timeout = 600) {
-  let executionStatus;
-
-  const stopTime = Date.now() + (timeout * 1000);
-
-  /* eslint-disable no-await-in-loop */
-  do {
-    executionStatus = await getExecutionStatus(executionArn);
-    if (executionStatus === 'RUNNING') await sleep(5000);
-  } while (executionStatus === 'RUNNING' && Date.now() < stopTime);
-  /* eslint-enable no-await-in-loop */
-
-  if (executionStatus === 'RUNNING') {
-    console.log(`waitForCompletedExecution('${executionArn}') timed out after ${timeout} seconds`);
-  }
-
-  return executionStatus;
+function waitForCompletedExecution(executionArn, timeout = 600) {
+  return waitForConditionalValue(
+    () => getExecutionStatus(executionArn),
+    (status) => status !== 'RUNNING',
+    {
+      interval: 5000,
+      timeout: timeout * 600
+    }
+  )
+    .catch((err) => {
+      if (err.name === 'TimeoutError') return 'RUNNING';
+      throw err;
+    });
 }
 
 /**
