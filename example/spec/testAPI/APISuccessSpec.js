@@ -1,7 +1,7 @@
 'use strict';
 
 const fs = require('fs-extra');
-const sleep = require('sleep-promise');
+const sleep = require('@cumulus/common/sleep');
 const {
   aws: { s3 }
 } = require('@cumulus/common');

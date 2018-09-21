@@ -7,10 +7,9 @@ const get = require('lodash.get');
  *
  * @param {number} milliseconds - number of milliseconds to sleep
  * @returns {Promise<undefined>} undefined
+ * @deprecated Use `@cumulus/common/sleep`
  */
-async function sleep(milliseconds) {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds));
-}
+module.exports.sleep = require('@cumulus/common/sleep');
 
 
 function errorify(err) {
@@ -87,7 +86,6 @@ function getGranuleProductVolume(granuleFiles) {
   return fileSizes.reduce((a, b) => a + b);
 }
 
-module.exports.sleep = sleep;
 module.exports.errorify = errorify;
 module.exports.parseException = parseException;
 module.exports.deconstructCollectionId = deconstructCollectionId;
