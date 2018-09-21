@@ -1,9 +1,9 @@
 'use strict';
 
 const fs = require('fs-extra');
-const sleep = require('@cumulus/common/sleep');
 const {
-  aws: { s3 }
+  aws: { s3 },
+  waitForConditionalValue
 } = require('@cumulus/common');
 const {
   buildAndExecuteWorkflow,
@@ -31,19 +31,19 @@ const testDataGranuleId = 'MOD09GQ.A2016358.h13v04.006.2016360104606';
  * @returns {Promise<boolean>} - whether or not the granule exists
  */
 async function waitForExist(CMRLink, outcome, retries, delay = 2000) {
-  if (retries === 0) {
-    console.log('Out of retries');
-    return false;
-  }
-
-  const existsCheck = await conceptExists(CMRLink);
-  if (existsCheck !== outcome) {
-    await sleep(delay);
-    console.log('Retrying ...');
-    return waitForExist(CMRLink, outcome, (retries - 1));
-  }
-
-  return true;
+  return waitForConditionalValue(
+    () => conceptExists(CMRLink),
+    (result) => result === outcome,
+    {
+      timeout: retries * delay,
+      interval: delay
+    }
+  )
+    .then(() => true)
+    .catch((err) => {
+      if (err === 'TimeoutError') return false;
+      throw err;
+    });
 }
 
 describe('The Cumulus API', () => {
