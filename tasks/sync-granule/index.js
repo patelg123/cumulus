@@ -16,12 +16,12 @@ const log = require('@cumulus/common/log');
  * @param {Object[]} granules - the granules to be ingested
  * @returns {Promise.<Array>} - the list of successfully ingested granules
  */
-async function download(ingest, bucket, provider, granules) {
+async function download(ingest, bucket, provider, files) {
   const updatedGranules = [];
 
   log.debug(`awaiting lock.proceed in download() bucket: ${bucket}, `
-            + `provider: ${JSON.stringify(provider)}, granuleID: ${granules[0].granuleId}`);
-  const proceed = await lock.proceed(bucket, provider, granules[0].granuleId);
+            + `provider: ${JSON.stringify(provider)}, file: ${files[0].filename}`);
+  const proceed = await lock.proceed(bucket, provider, files[0].filename);
 
   if (!proceed) {
     const err =
@@ -30,21 +30,21 @@ async function download(ingest, bucket, provider, granules) {
     throw err;
   }
 
-  for (const g of granules) {
+  for (const f of files) {
     try {
-      log.debug(`await ingest.ingest(${JSON.stringify(g)}, ${bucket})`);
-      const r = await ingest.ingest(g, bucket);
+      log.debug(`await ingest.ingest(${JSON.stringify(f)}, ${bucket})`);
+      const r = await ingest.ingest(f, bucket);
       updatedGranules.push(r);
     }
     catch (e) {
-      log.debug(`Error caught, await lock.removeLock(${bucket}, ${provider.id}, ${g.granuleId})`);
-      await lock.removeLock(bucket, provider.id, g.granuleId);
+      log.debug(`Error caught, await lock.removeLock(${bucket}, ${provider.id}, ${f.filename})`);
+      await lock.removeLock(bucket, provider.host, f.filename);
       log.error(e);
       throw e;
     }
   }
-  log.debug(`finshed, await lock.removeLock(${bucket}, ${provider.id}, ${granules[0].granuleId})`);
-  await lock.removeLock(bucket, provider.id, granules[0].granuleId);
+  log.debug(`finshed, await lock.removeLock(${bucket}, ${provider.host}, ${files[0].filename})`);
+  await lock.removeLock(bucket, provider.host, files[0].filename);
   return updatedGranules;
 }
 
@@ -59,11 +59,12 @@ exports.syncGranule = function syncGranule(event) {
   const input = event.input;
   const stack = config.stack;
   const buckets = config.buckets;
-  const provider = config.provider;
-  const collection = config.collection;
   const forceDownload = config.forceDownload || false;
   const downloadBucket = config.downloadBucket;
+  const provider = config.provider;
+  const protocol = provider.protocol;
   let duplicateHandling = config.duplicateHandling;
+  const collection = config.collection || {};
   if (!duplicateHandling && collection && collection.duplicateHandling) {
     duplicateHandling = collection.duplicateHandling;
   }
@@ -74,13 +75,7 @@ exports.syncGranule = function syncGranule(event) {
     stack
   );
 
-  if (!provider) {
-    const err = new errors.ProviderNotFound('Provider info not provided');
-    log.error(err);
-    return Promise.reject(err);
-  }
-
-  const IngestClass = granule.selector('ingest', provider.protocol);
+  const IngestClass = granule.selector('ingest', protocol);
   const ingest = new IngestClass(
     buckets,
     collection,
@@ -90,7 +85,7 @@ exports.syncGranule = function syncGranule(event) {
     duplicateHandling
   );
 
-  return download(ingest, downloadBucket, provider, input.granules)
+  return download(ingest, downloadBucket, provider, input.files)
     .then((granules) => {
       if (ingest.end) ingest.end();
       const output = { granules };
