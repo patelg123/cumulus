@@ -40,7 +40,7 @@ class Discover {
     }
 
     this.buckets = event.config.buckets;
-    this.collection = event.config.collection;
+    this.collection = event.config.collection || {};
     this.provider = event.config.provider;
     this.useList = event.config.useList;
     this.event = event;
@@ -55,12 +55,14 @@ class Discover {
 
     // create hash with file regex as key
     this.regexes = {};
-    this.collection.files.forEach((f) => {
-      this.regexes[f.regex] = {
-        collection: this.collection.name,
-        bucket: this.buckets[f.bucket].name
-      };
-    });
+    if (this.collection && this.collection.files) {
+      this.collection.files.forEach((f) => {
+        this.regexes[f.regex] = {
+          collection: this.collection.name,
+          bucket: this.buckets[f.bucket].name
+        };
+      });
+    }
   }
 
   /**
@@ -226,19 +228,20 @@ class Granule {
     this.collectionId = constructCollectionId(dataType, version);
     this.fileStagingDir = path.join(this.fileStagingDir, this.collectionId);
 
-    const downloadFiles = granule.files
-      .filter((f) => this.filterChecksumFiles(f))
-      .map((f) => this.ingestFile(f, bucket, this.duplicateHandling));
+    // const downloadFiles = granule.files
+    //   .filter((f) => this.filterChecksumFiles(f))
+    //   .map((f) => this.ingestFile(f, bucket, this.duplicateHandling));
+    return this.ingestFile(granule, bucket, this.duplicateHandling);
 
-    log.debug('awaiting all download.Files');
-    const files = await Promise.all(downloadFiles);
-    log.debug('finished ingest()');
-    return {
-      granuleId: granule.granuleId,
-      dataType: dataType,
-      version: version,
-      files
-    };
+    // log.debug('awaiting all download.Files');
+    // const files = await downloadFiles;
+    // log.debug('finished ingest()');
+    // return {
+    //   granuleId: granule.granuleId,
+    //   dataType: dataType,
+    //   version: version,
+    //   files
+    // };
   }
 
   /**
@@ -479,7 +482,7 @@ class Granule {
     // Check if the file exists
     const exists = await aws.s3ObjectExists({
       Bucket: bucket,
-      Key: path.join(this.fileStagingDir, file.name)
+      Key: path.join(this.fileStagingDir, file.filename)
     });
 
     // Exit early if we can
@@ -492,10 +495,10 @@ class Granule {
     // we are replacing it with a more recent one or
     // adding another version of it to the bucket
 
-    const fileRemotePath = path.join(file.path, file.name);
+    const fileRemotePath = path.join(file.path || '', file.filename);
 
     // s3 file staging location
-    let fullKey = path.join(this.fileStagingDir, file.name);
+    let fullKey = path.join(this.fileStagingDir, file.filename);
     if (fullKey[0] === '/') fullKey = fullKey.substr(1);
 
     // stream the source file to s3
@@ -506,10 +509,12 @@ class Granule {
     log.debug(`await validateChecksum ${JSON.stringify(file)}, ${bucket}, ${fullKey}`);
     await this.validateChecksum(file, bucket, fullKey);
 
+    console.log(`collection is ${JSON.stringify(this.collection, null, 2)}`);
+    const urlPath = (this.collection && this.collection.files) ? this.getUrlPath(file) : '';
     return Object.assign(file, {
       filename,
       fileStagingDir: this.fileStagingDir,
-      url_path: this.getUrlPath(file),
+      url_path: urlPath,
       bucket
     });
   }
