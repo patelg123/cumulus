@@ -14,5 +14,6 @@ CumulusApiV1.yml
 yarn.lock
 spec/config.override.yml
 spec/*/*.input.json
+spec/*.input.json
 spec/*/*.output.payload.json
 yarn-error.log
