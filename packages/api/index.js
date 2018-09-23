@@ -1,11 +1,7 @@
 'use strict';
 
 exports.token = require('./endpoints/token').handler;
-exports.collections = require('./endpoints/collections');
-exports.granules = require('./endpoints/granules');
 exports.logs = require('./endpoints/logs');
-exports.pdrs = require('./endpoints/pdrs');
-exports.providers = require('./endpoints/providers');
 exports.rules = require('./endpoints/rules');
 exports.workflows = require('./endpoints/workflows');
 exports.executions = require('./endpoints/executions');
