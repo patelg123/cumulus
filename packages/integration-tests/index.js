@@ -143,7 +143,8 @@ async function startWorkflowExecution(workflowArn, workflowMsg) {
  * @param {string} workflowMsg - workflow message
  * @returns {string} - executionArn
  */
-async function startWorkflow(stackName, bucketName, workflowName, workflowMsg) {
+async function startWorkflow(opts = {}) {
+  const { stackName, bucketName, workflowName, workflowMsg } = opts;
   const workflowArn = await getWorkflowArn(stackName, bucketName, workflowName);
   const { executionArn } = await startWorkflowExecution(workflowArn, workflowMsg);
 
@@ -164,8 +165,9 @@ async function startWorkflow(stackName, bucketName, workflowName, workflowMsg) {
  * @param {number} [timeout=600] - number of seconds to wait for execution to complete
  * @returns {Object} - {executionArn: <arn>, status: <status>}
  */
-async function executeWorkflow(stackName, bucketName, workflowName, workflowMsg, timeout = 600) {
-  const executionArn = await startWorkflow(stackName, bucketName, workflowName, workflowMsg);
+async function executeWorkflow(opts = {}) {
+  const { timeout = 600 } = opts;
+  const executionArn = await startWorkflow(opts);
 
   // Wait for the execution to complete to get the status
   const status = await waitForCompletedExecution(executionArn, timeout);
@@ -357,20 +359,12 @@ async function deleteRules(stackName, bucketName, rules) {
  * @param {Object} payload - payload information
  * @returns {Promise.<string>} workflow message
  */
-async function buildWorkflow(stackName, bucketName, workflowName, collection, provider, payload) {
+async function buildWorkflow(opts = {}) {
+  const { stackName, bucketName, workflowName, collection, provider, payload } = opts;
   setProcessEnvironment(stackName, bucketName);
   const template = await getWorkflowTemplate(stackName, bucketName, workflowName);
-  let collectionInfo = {};
-  if (collection) {
-    collectionInfo = await new Collection()
-      .get({ name: collection.name, version: collection.version });
-  }
-  let providerInfo = {};
-  if (provider) {
-    providerInfo = await new Provider().get({ id: provider.id });
-  }
-  template.meta.collection = collectionInfo;
-  template.meta.provider = providerInfo;
+  template.meta.collection = collection;
+  template.meta.provider = provider;
   template.payload = payload || {};
   return template;
 }
@@ -390,24 +384,17 @@ async function buildWorkflow(stackName, bucketName, workflowName, collection, pr
  * @param {number} [timeout=600] - number of seconds to wait for execution to complete
  * @returns {Object} - {executionArn: <arn>, status: <status>}
  */
-async function buildAndExecuteWorkflow(
+async function buildAndExecuteWorkflow(opts = {
   stackName,
   bucketName,
   workflowName,
   collection,
   provider,
   payload,
-  timeout = 600
-) {
-  const workflowMsg = await buildWorkflow(
-    stackName,
-    bucketName,
-    workflowName,
-    collection,
-    provider,
-    payload
-  );
-  return executeWorkflow(stackName, bucketName, workflowName, workflowMsg, timeout);
+  timeout: 600
+}) {
+  const workflowMsg = await buildWorkflow(opts);
+  return executeWorkflow({ ...opts, workflowMsg });
 }
 
 /**
@@ -425,17 +412,16 @@ async function buildAndExecuteWorkflow(
  * @param {Object} payload - payload information
  * @returns {string} - executionArn
  */
-async function buildAndStartWorkflow(
+async function buildAndStartWorkflow(opts = {
   stackName,
   bucketName,
   workflowName,
   collection,
   provider,
   payload
-) {
-  const workflowMsg = await
-  buildWorkflow(stackName, bucketName, workflowName, collection, provider, payload);
-  return startWorkflow(stackName, bucketName, workflowName, workflowMsg);
+}) {
+  const workflowMsg = await buildWorkflow(opts);
+  return startWorkflow({ ...opts, workflowMsg });
 }
 
 module.exports = {
