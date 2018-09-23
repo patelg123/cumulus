@@ -11,6 +11,7 @@
 
 'use strict';
 
+const AWS = require('aws-sdk');
 const { Kes } = require('kes');
 const Handlebars = require('handlebars');
 
@@ -31,6 +32,30 @@ class UpdatedKes extends Kes {
     });
 
     return super.parseCF(cfFile);
+  }
+
+  async checkBucketExists(options) { 
+    const s3 = new AWS.S3();
+    try {
+      await s3.headBucket(options).promise();
+      return true;
+    } catch (error) {
+      if (error.statusCode === 404) {
+        return false;
+      }
+      throw error;
+    }
+  };
+
+  async uploadCF() {
+    const s3 = new AWS.S3();
+    const options = { Bucket: this.bucket };
+    const bucketExists = this.bucket && await this.checkBucketExists(options);
+    if (!bucketExists) {
+      console.log(`options are ${JSON.stringify(options)}`);
+      await s3.createBucket(options).promise();
+    }
+    return super.uploadCF();
   }
 }
 
