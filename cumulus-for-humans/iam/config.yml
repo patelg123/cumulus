@@ -1,0 +1,20 @@
+default:
+  prefix: simple-cumulus
+  stackName: '{{prefix}}-iam'
+  authorizor: false
+  capabilities:
+    - CAPABILITY_NAMED_IAM
+
+  system_bucket: '{{buckets.internal.name}}'
+
+  # Internal bucket is used to store lambda packages and workflow templates
+  buckets:
+    internal:
+      name: '{{prefix}}-internal-bucket'
+      type: internal
+
+  # Resource prefix is used to generate name-spaced IAM policies
+  params:
+     - name: ResourcePrefix
+       value: '{{prefix}}'
+

@@ -1,0 +1,54 @@
+{
+  "name": "cumulus-for-humans-example",
+  "version": "1.0.0",
+  "description": "Cumulus for Humans Deployment",
+  "main": "index.js",
+  "scripts": {
+    "test": "jasmine",
+    "deploy": "./node_modules/.bin/kes cf deploy --kes-folder app --region us-east-1 --deployment $DEPLOYMENT --template node_modules/@cumulus/deployment/app --profile $AWS_PROFILE",
+    "deploy-iam": "./node_modules/.bin/kes cf deploy --kes-folder iam --region us-east-1 --deployment $DEPLOYMENT --template node_modules/@cumulus/deployment/iam  --profile $AWS_PROFILE",
+    "deploy-lambda": "./node_modules/.bin/kes lambda $LAMBDA --kes-folder app --region us-east-1 --template node_modules/@cumulus/deployment/app --profile $AWS_PROFILE"
+  },
+  "engines": {
+    "node": ">=8.10.0"
+  },
+  "author": "Cumulus Authors",
+  "license": "Apache-2.0",
+  "babel": {
+    "presets": [
+      [
+        "env",
+        {
+          "targets": {
+            "node": "6.10"
+          }
+        }
+      ]
+    ]
+  },
+  "dependencies": {
+    "@cumulus/api": "^1.10.1",
+    "@cumulus/deployment": "^1.10.1",
+    "@cumulus/integration-tests": "^1.10.1",
+    "@cumulus/sf-sns-report": "^1.10.0",
+    "@cumulus/sync-granule": "^1.10.0",
+    "aws-sdk": "^2.227.1",
+    "child-process-promise": "^2.2.1",
+    "sleep-promise": "^8.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^4.19.1",
+    "eslint-plugin-jsdoc": "^3.7.1",
+    "fs-extra": "^7.0.0",
+    "got": "^8.3.0",
+    "jasmine": "^3.1.0",
+    "jasmine-console-reporter": "^2.0.1",
+    "js-yaml": "^3.12.0",
+    "kes": "^2.2.2",
+    "lodash": "^4.17.10",
+    "lodash.clonedeep": "^4.5.0",
+    "moment": "^2.22.2",
+    "node-forge": "^0.7.5",
+    "url-join": "^1.1.0"
+  }
+}

@@ -1,0 +1,14 @@
+SfSnsReport:
+  handler: index.handler
+  timeout: 300
+  source: node_modules/@cumulus/sf-sns-report/dist
+  useMessageAdapter: true
+SyncGranule:
+  handler: index.handler
+  timeout: 300
+  logToElasticSearch: true
+  source: node_modules/@cumulus/sync-granule/dist/
+  useMessageAdapter: true
+  launchInVpc: true
+  envs:
+    internal: '{{buckets.internal.name}}'
