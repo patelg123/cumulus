@@ -85,14 +85,17 @@ async function enqueueGranuleIngestMessage(
   // Build the message from a template
   const message = await getMessageFromTemplate(granuleIngestMessageTemplateUri);
 
+  // message.payload = {
+  //   granules: [{
+  //     granuleId: granule.granuleId,
+  //     dataType: granule.dataType,
+  //     version: granule.version,
+  //     files: granule.files
+  //   }]
+  // };
   message.payload = {
-    granules: [{
-      granuleId: granule.granuleId,
-      dataType: granule.dataType,
-      version: granule.version,
-      files: granule.files
-    }]
-  };
+    files: [ granule ]
+  }
   if (pdr) message.meta.pdr = pdr;
 
   message.meta.provider = provider;

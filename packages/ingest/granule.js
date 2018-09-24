@@ -108,13 +108,20 @@ class Discover {
   async discover() {
     let discoveredFiles = [];
     try {
-      discoveredFiles = (await this.list())
-        // Make sure the file matches the granuleIdExtraction
-        .filter((file) => file.name.match(this.collection.granuleIdExtraction))
-        // Make sure there is a config for this type of file
-        .filter((file) => this.fileTypeConfigForFile(file))
-        // Add additional granule-related properties to the file
-        .map((file) => this.setGranuleInfo(file));
+      discoveredFiles = await this.list();
+      if (this.collection.granuleIdExtraction) {
+        discoveredFiles = discoveredFiles
+          .filter((file) => {
+            file.name.match(this.collection.granuleIdExtraction)
+          })
+          // Make sure there is a config for this type of file
+          .filter((file) => this.fileTypeConfigForFile(file))
+          // Add additional granule-related properties to the file
+          .map((file) => this.setGranuleInfo(file));
+      }
+      else {
+        return discoveredFiles;
+      }
     }
     catch (err) {
       log.error(`discover exception ${JSON.stringify(err)}`);
@@ -125,7 +132,7 @@ class Discover {
     // already exists in S3.  If it does then it isn't a new file and we are
     // going to ignore it.
     const newFiles = (await Promise.all(discoveredFiles.map((discoveredFile) =>
-      aws.s3ObjectExists({ Bucket: discoveredFile.bucket, Key: discoveredFile.name })
+      aws.s3ObjectExists({ Bucket: discoveredFile.bucket, Key: discoveredFile.filename })
         .then((exists) => (exists ? null : discoveredFile)))))
       .filter(identity);
 

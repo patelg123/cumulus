@@ -42,7 +42,7 @@ SyncGranule:
       Type: Fail
       Cause: 'Workflow failed'
 
-DiscoverGranules:
+DiscoverAndQueueGranules:
   Comment: 'Discovers new Granules from a given provider'
   StartAt: StatusReport
   TimeoutSeconds: 18000 # 5 hours
@@ -57,7 +57,6 @@ DiscoverGranules:
     DiscoverGranules:
       CumulusConfig:
         provider: '{$.meta.provider}'
-        collection: '{$.meta.collection}'
         buckets: '{$.meta.buckets}'
         stack: '{$.meta.stack}'
       Type: Task

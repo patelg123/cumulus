@@ -28,7 +28,7 @@ async function discoverGranules(event) {
 
   log.info(`Discovered ${granules.length} granules.`);
 
-  return { granules };
+  return { files };
 }
 exports.discoverGranules = discoverGranules;
 

@@ -29,8 +29,8 @@ describe('The Sync Granules workflow', () => {
   const inputPayloadFilename = './spec/syncGranule.input.json';
   const payload = JSON.parse(fs.readFileSync(inputPayloadFilename));
   const provider = {
-    host: 'https://openaq-data.s3.amazonaws.com/index.html',
-    protocol: 'https'
+    host: 'openaq-data',
+    protocol: 's3'
   };
   let workflowExecution = null;
 

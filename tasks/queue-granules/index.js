@@ -13,18 +13,23 @@ const { getExecutionArn } = require('@cumulus/common/aws');
 *   that is passed to the next task in the workflow
 **/
 async function queueGranules(event) {
-  const granules = event.input.granules || [];
+  const granules = event.input.files || [];
 
-  const collectionConfigStore =
-    new CollectionConfigStore(event.config.internalBucket, event.config.stackName);
+  const collectionConfigStore = new CollectionConfigStore(event.config.internalBucket, event.config.stackName);
 
-  const arn = getExecutionArn(
-    get(event, 'cumulus_config.state_machine'), get(event, 'cumulus_config.execution_name')
-  );
+  let arn;
+  if (get(event, 'cumulus_config')) {
+    arn = getExecutionArn(
+      get(event, 'cumulus_config.state_machine'), get(event, 'cumulus_config.execution_name')
+    );
+  }
 
   const executionArns = await Promise.all( // eslint-disable-line function-paren-newline
     granules.map(async (granule) => {
-      const collectionConfig = await collectionConfigStore.get(granule.dataType, granule.version);
+      let collectionConfig;
+      if (granule.dataType) {
+        collectionConfig = await collectionConfigStore.get(granule.dataType, granule.version);
+      };
 
       return enqueueGranuleIngestMessage(
         granule,

@@ -82,7 +82,7 @@ module.exports.s3Mixin = (superclass) => class extends superclass {
 
     return objects.map((object) => {
       const file = {
-        name: path.basename(object.Key),
+        filename: path.basename(object.Key),
         path: path.dirname(object.Key),
         size: object.Size,
         time: (new Date(object.LastModified)).valueOf()

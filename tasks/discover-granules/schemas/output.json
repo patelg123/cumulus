@@ -2,14 +2,14 @@
   "title": "DiscoverGranulesOutput",
   "description": "Describes the output produced by the discover-granules task",
   "type": "object",
-  "required": [ "granules" ],
+  "required": [ "files" ],
   "additionalProperties": false,
   "properties": {
-    "granules": {
+    "files": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": [ "granuleId", "dataType", "version", "files" ],
+        "required": [ ],
         "properties": {
           "granuleId": { "type": "string" },
           "dataType": { "type": "string" },
