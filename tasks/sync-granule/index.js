@@ -37,7 +37,7 @@ async function download(ingest, bucket, provider, granules) {
       updatedGranules.push(r);
     }
     catch (e) {
-      log.debug(`Error caught, await lock.removeLock(${bucket}, ${provider.id}, ${g.granuleId})`);
+      log.debug(`Error caught, await ingest.ingest(${JSON.stringify(g)},${bucket})`);
       await lock.removeLock(bucket, provider.id, g.granuleId);
       log.error(e);
       throw e;
