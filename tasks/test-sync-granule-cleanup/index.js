@@ -37,7 +37,7 @@ function handler(event, context, callback) {
 
 
   if (syncDuration > 2 * 60 * 1000) {
-    callback(`SyncGranule Took too long to finish ${syncDuration}`);
+    callback(new Error(`SyncGranule Took too long to finish ${syncDuration}`));
   }
   else {
     callback(null, event);
