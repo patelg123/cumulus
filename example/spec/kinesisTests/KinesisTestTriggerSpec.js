@@ -85,13 +85,14 @@ const expectedSyncGranulesPayload = {
 // stream. When a record appears on the stream, the kinesisConsumer lambda
 // triggers workflows associated with the kinesis-type rules.
 describe('The Cloud Notification Mechanism Kinesis workflow', () => {
-  const maxWaitForSFExistSecs =  60 * 4;
+  const maxWaitForSFExistSecs = 60 * 4;
   const maxWaitForExecutionSecs = 60 * 5;
   let executionStatus;
   let s3FileHead;
   let responseStreamShardIterator;
 
   afterAll(async () => {
+    console.log(`\ncleaning up bucket: ${testConfig.buckets.private.name} key: ${filePrefix}/${fileData.name}`);
     await s3().deleteObject({
       Bucket: testConfig.buckets.private.name,
       Key: `${filePrefix}/${fileData.name}`

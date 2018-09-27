@@ -127,7 +127,14 @@ module.exports.s3Mixin = (superclass) => class extends superclass {
 
     const syncTimeSecs = (new Date() - startTime) / 1000.0;
     log.info(`s3 Upload completed in ${syncTimeSecs} secs`, s3uri);
-    const objectData = await aws.headObject(params.Bucket, params.Key);
+    let objectData;
+    try {
+      objectData = await aws.headObject(params.Bucket, params.Key);
+    } catch (e) {
+      log.error(`failed to await headObject for ${params.Bucket}, ${params.Key} `);
+      log.error(e);
+      throw e;
+    }
     log.info(`synced ${objectData.ContentLength} bytes`);
     return s3uri;
   }

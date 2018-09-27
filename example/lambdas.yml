@@ -129,3 +129,7 @@ VersionUpTest:
   handler: index.handler
   memory: 128
   source: lambdas/versionUpTest
+TestSyncGranuleCleanup:
+  memory: 128
+  handler: index.handler
+  source: node_modules/@cumulus/test-sync-granule-cleanup/dist/

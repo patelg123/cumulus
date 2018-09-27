@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jasmine",
-    "deploy": "./node_modules/.bin/kes cf deploy --kes-folder app --region us-east-1 --deployment $DEPLOYMENT --template node_modules/@cumulus/deployment/app --profile $AWS_PROFILE",
+    "deploy": "./node_modules/.bin/kes cf deploy --kes-folder app --region us-east-1 --deployment $DEPLOYMENT --template node_modules/@cumulus/deployment/app --profile $AWS_PROFILE && date",
     "deploy-iam": "./node_modules/.bin/kes cf deploy --kes-folder iam --region us-east-1 --deployment $DEPLOYMENT --template node_modules/@cumulus/deployment/iam  --profile $AWS_PROFILE"
   },
   "engines": {
@@ -43,6 +43,7 @@
     "@cumulus/sync-granule": "^1.10.0",
     "@cumulus/test-data": "^1.10.0",
     "@cumulus/test-processing": "^1.10.1",
+    "@cumulus/test-sync-granule-cleanup": "^1.10.0",
     "aws-sdk": "^2.227.1",
     "child-process-promise": "^2.2.1",
     "sleep-promise": "^8.0.1"

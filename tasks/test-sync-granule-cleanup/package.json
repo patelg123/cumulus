@@ -1,0 +1,26 @@
+{
+  "name": "@cumulus/test-sync-granule-cleanup",
+  "version": "1.10.0",
+  "description": "tests sync granule tasks and alerts if slow, cleans files",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">=8.10.0"
+  },
+  "scripts": {
+    "build": "webpack",
+    "watch": "webpack --progress -w",
+    "prepublishOnly": "PRODUCTION=true npm run build"
+  },
+  "author": "Cumulus Authors",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@cumulus/common": "^1.10.0"
+  },
+  "devDependencies": {
+    "webpack": "~4.5.0",
+    "webpack-cli": "~2.0.14"
+  }
+}
