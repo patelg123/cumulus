@@ -19,9 +19,11 @@ const log = require('@cumulus/common/log');
 async function download(ingest, bucket, provider, granules) {
   const updatedGranules = [];
 
-  log.debug(`awaiting lock.proceed in download() bucket: ${bucket}, `
-            + `provider: ${JSON.stringify(provider)}, granuleID: ${granules[0].granuleId}`);
-  const proceed = await lock.proceed(bucket, provider, granules[0].granuleId);
+  // log.debug(`awaiting lock.proceed in download() bucket: ${bucket}, `
+  //           + `provider: ${JSON.stringify(provider)}, granuleID: ${granules[0].granuleId}`);
+  // const proceed = await lock.proceed(bucket, provider, granules[0].granuleId);
+  // log.debug('acquired lock');
+  const proceed = true;
 
   if (!proceed) {
     const err =
@@ -34,17 +36,18 @@ async function download(ingest, bucket, provider, granules) {
     try {
       log.debug(`await ingest.ingest(${JSON.stringify(g)}, ${bucket})`);
       const r = await ingest.ingest(g, bucket);
+      log.debug('ingest complete');
       updatedGranules.push(r);
     }
     catch (e) {
       log.debug(`Error caught, await ingest.ingest(${JSON.stringify(g)},${bucket})`);
-      await lock.removeLock(bucket, provider.id, g.granuleId);
+      //await lock.removeLock(bucket, provider.id, g.granuleId);
       log.error(e);
       throw e;
     }
   }
   log.debug(`finshed, await lock.removeLock(${bucket}, ${provider.id}, ${granules[0].granuleId})`);
-  await lock.removeLock(bucket, provider.id, granules[0].granuleId);
+  //await lock.removeLock(bucket, provider.id, granules[0].granuleId);
   return updatedGranules;
 }
 
@@ -55,22 +58,36 @@ async function download(ingest, bucket, provider, granules) {
  * @returns {Promise.<Object>} - a description of the ingested granules
  */
 exports.syncGranule = function syncGranule(event) {
-  const config = event.config;
-  const input = event.input;
-  const stack = config.stack;
-  const buckets = config.buckets;
-  const provider = config.provider;
-  const collection = config.collection;
-  const forceDownload = config.forceDownload || false;
-  const downloadBucket = config.downloadBucket;
-  let duplicateHandling = config.duplicateHandling;
+  // const config = event.config;
+  const input = event.payload;
+
+  console.log(`input: ${JSON.stringify(input)}`);
+
+  const stack = event.meta.stack;
+  const buckets = event.meta.buckets;
+  const provider = event.meta.provider;
+  const collection = event.meta.collection;
+  const forceDownload = false;
+  const downloadBucket = event.meta.buckets.private.name;
+  let duplicateHandling = null;
   if (!duplicateHandling && collection && collection.duplicateHandling) {
     duplicateHandling = collection.duplicateHandling;
   }
 
+  /*
+buckets: '{$.meta.buckets}'
+        provider: '{$.meta.provider}'
+        collection: '{$.meta.collection}'
+        stack: '{$.meta.stack}'
+        fileStagingDir: 'custom-staging-dir'
+        downloadBucket: '{$.meta.buckets.private.name}'
+  */
+
+  log.debug('Start sync granule');
+
   // use stack and collection names to prefix fileStagingDir
   const fileStagingDir = path.join(
-    (config.fileStagingDir || 'file-staging'),
+    'file-staging',
     stack
   );
 
@@ -95,7 +112,6 @@ exports.syncGranule = function syncGranule(event) {
       if (ingest.end) ingest.end();
       const output = { granules };
       if (collection && collection.process) output.process = collection.process;
-      if (config.pdr) output.pdr = config.pdr;
       log.debug(`SyncGranule Complete. Returning output: ${JSON.stringify(output)}`);
       return output;
     }).catch((e) => {
@@ -124,20 +140,25 @@ exports.syncGranule = function syncGranule(event) {
  * @returns {undefined} - does not return a value
  */
 exports.handler = function handler(event, context, callback) {
-  const startTime = Date.now();
+  //const startTime = Date.now();
 
-  cumulusMessageAdapter.runCumulusTask(exports.syncGranule, event, context, (err, data) => {
-    if (err) {
-      callback(err);
-    }
-    else {
-      const endTime = Date.now();
-      const additionalMetaFields = {
-        sync_granule_duration: endTime - startTime,
-        sync_granule_end_time: endTime
-      };
-      const meta = Object.assign({}, data.meta, additionalMetaFields);
-      callback(null, Object.assign({}, data, { meta }));
-    }
-  });
+  //log.debug('Call message adapter for sync granule');
+
+  exports.syncGranule(event).then((data) => callback(null, data))
+    .catch((err) => callback(err));
+
+  // cumulusMessageAdapter.runCumulusTask(exports.syncGranule, event, context, (err, data) => {
+  //   if (err) {
+  //     callback(err);
+  //   }
+  //   else {
+  //     const endTime = Date.now();
+  //     const additionalMetaFields = {
+  //       sync_granule_duration: endTime - startTime,
+  //       sync_granule_end_time: endTime
+  //     };
+  //     const meta = Object.assign({}, data.meta, additionalMetaFields);
+  //     callback(null, Object.assign({}, data, { meta }));
+  //   }
+  // });
 };

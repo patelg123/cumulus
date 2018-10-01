@@ -27,7 +27,7 @@ async function checkOldLocks(bucket, list) {
       const diff = new Date() - date;
       const fiveMinutes = 300000; // 5 * 60 seconds * 1000 milliseconds
       if (diff > fiveMinutes) {
-        aws.S3.delete(bucket, list[item].Key);
+        await aws.S3.delete(bucket, list[item].Key);
         count--;
       }
     }
@@ -45,11 +45,11 @@ async function checkOldLocks(bucket, list) {
 * @returns {integer} - Number of current locks in the bucket
 **/
 async function countLock(bucket, pName) {
-  const list = aws.s3().listObjectsV2({
+  const list = await aws.s3().listObjectsV2({
     Bucket: bucket,
     Prefix: `${lockPrefix}/${pName}`
   }).promise();
-  const count = checkOldLocks(bucket, list.Contents);
+  const count = await checkOldLocks(bucket, list.Contents);
   return count;
 }
 

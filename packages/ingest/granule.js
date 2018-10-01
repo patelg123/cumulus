@@ -420,7 +420,7 @@ class Granule {
 
     // if not enabled, make it enabled
     if (versioning.Status !== 'Enabled') {
-      aws.s3().putBucketVersioning({
+      await aws.s3().putBucketVersioning({
         Bucket: bucket,
         VersioningConfiguration: { Status: 'Enabled' }
       }).promise();

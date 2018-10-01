@@ -106,6 +106,7 @@ SyncGranule:
   logToElasticSearch: true
   source: node_modules/@cumulus/sync-granule/dist/
   useMessageAdapter: true
+  memory: 2048
   launchInVpc: true
   envs:
     internal: '{{buckets.internal.name}}'
@@ -115,6 +116,7 @@ SyncGranuleNoVpc:
   timeout: 300
   logToElasticSearch: true
   source: node_modules/@cumulus/sync-granule/dist/
+  memory: 2048
   useMessageAdapter: true
 S3AccessTest:
   handler: index.handler
@@ -132,4 +134,4 @@ VersionUpTest:
 TestSyncGranuleCleanup:
   memory: 128
   handler: index.handler
-  source: node_modules/@cumulus/test-sync-granule-cleanup/dist/
+  source: ../tasks/test-sync-granule-cleanup/dist/
