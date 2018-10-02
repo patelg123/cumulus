@@ -477,6 +477,7 @@ class Granule {
    */
   async ingestFile(file, bucket, duplicateHandling) {
     // Check if the file exists
+    const start = new Date();
     const exists = await aws.s3ObjectExists({
       Bucket: bucket,
       Key: path.join(this.fileStagingDir, file.name)
@@ -501,10 +502,14 @@ class Granule {
     // stream the source file to s3
     log.debug(`await sync file to s3 ${fileRemotePath}, ${bucket}, ${fullKey}`);
     const filename = await this.sync(fileRemotePath, bucket, fullKey);
+    const after = new Date();
+    log.debug(`synced complete in ${(start - after) / 1000.0} secs`);
 
     // Validate the checksum
     log.debug(`await validateChecksum ${JSON.stringify(file)}, ${bucket}, ${fullKey}`);
     await this.validateChecksum(file, bucket, fullKey);
+    const after2 = new Date();
+    log.debug(`validateChecksum ${(after2 - after) / 1000.0 }`);
 
     return Object.assign(file, {
       filename,

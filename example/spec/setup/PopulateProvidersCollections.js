@@ -18,7 +18,8 @@ const s3data = [
   '@cumulus/test-data/granules/MOD09GQ.A2016358.h13v04.006.2016360104606.hdf.met',
   '@cumulus/test-data/granules/MOD09GQ.A2016358.h13v04.006.2016360104606.hdf',
   '@cumulus/test-data/granules/MOD09GQ.A2016358.h13v04.006.2016360104606_ndvi.jpg',
-  '@cumulus/test-data/granules/L2_HR_PIXC_product_0001-of-4154.h5'
+  '@cumulus/test-data/granules/L2_HR_PIXC_product_0001-of-4154.h5',
+  '@cumulus/test-data/granules/FAKE_FILE.h5'
 ];
 
 /**

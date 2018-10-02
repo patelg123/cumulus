@@ -109,7 +109,11 @@ module.exports.s3Mixin = (superclass) => class extends superclass {
     const s3uri = aws.buildS3Uri(bucket, key);
     log.info(`Sync ${remoteUrl} to ${s3uri}`);
 
+    log.info(`await fileExist`);
+    let start = new Date();
     const exist = await aws.fileExists(this.host, remotePath.replace(/^\/+/, ''));
+    let duration = (new Date() - start) / 1000.0;
+    log.info(`fileExist complete in ${duration} secs`);
     if (!exist) {
       const message = `Source file not found ${remoteUrl}`;
       throw new errors.FileNotFound(message);

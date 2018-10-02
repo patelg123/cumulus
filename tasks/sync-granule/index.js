@@ -35,8 +35,10 @@ async function download(ingest, bucket, provider, granules) {
   for (const g of granules) {
     try {
       log.debug(`await ingest.ingest(${JSON.stringify(g)}, ${bucket})`);
+      let start = new Date();
       const r = await ingest.ingest(g, bucket);
-      log.debug('ingest complete');
+      let duration = (new Date() - start) / 1000.0;
+      log.debug(`ingest.ingest complete in ${duration} secs`);
       updatedGranules.push(r);
     }
     catch (e) {
@@ -61,7 +63,7 @@ exports.syncGranule = function syncGranule(event) {
   // const config = event.config;
   const input = event.payload;
 
-  console.log(`input: ${JSON.stringify(input)}`);
+  log.debug(`input: ${JSON.stringify(input)}`);
 
   const stack = event.meta.stack;
   const buckets = event.meta.buckets;
@@ -98,6 +100,8 @@ buckets: '{$.meta.buckets}'
   }
 
   const IngestClass = granule.selector('ingest', provider.protocol);
+  log.debug(`create IngestClass`);
+  let start = new Date();
   const ingest = new IngestClass(
     buckets,
     collection,
@@ -106,6 +110,8 @@ buckets: '{$.meta.buckets}'
     forceDownload,
     duplicateHandling
   );
+  const duration = (new Date() - start) / 1000.0;
+  log.debug(`created IngestClass in ${duration} secs`);
 
   return download(ingest, downloadBucket, provider, input.granules)
     .then((granules) => {
@@ -140,25 +146,18 @@ buckets: '{$.meta.buckets}'
  * @returns {undefined} - does not return a value
  */
 exports.handler = function handler(event, context, callback) {
-  //const startTime = Date.now();
+  const startTime = Date.now();
 
   //log.debug('Call message adapter for sync granule');
-
-  exports.syncGranule(event).then((data) => callback(null, data))
+  exports.syncGranule(event).then((data) => {
+    const endTime = Date.now();
+    const additionalMetaFields = {
+      sync_granule_duration: endTime - startTime,
+      sync_granule_end_time: endTime
+    };
+    const meta = Object.assign({}, event.meta, additionalMetaFields);
+    const payload = Object.assign({}, event.payload, data);
+    callback(null, Object.assign({}, event, { meta, payload }));
+  })
     .catch((err) => callback(err));
-
-  // cumulusMessageAdapter.runCumulusTask(exports.syncGranule, event, context, (err, data) => {
-  //   if (err) {
-  //     callback(err);
-  //   }
-  //   else {
-  //     const endTime = Date.now();
-  //     const additionalMetaFields = {
-  //       sync_granule_duration: endTime - startTime,
-  //       sync_granule_end_time: endTime
-  //     };
-  //     const meta = Object.assign({}, data.meta, additionalMetaFields);
-  //     callback(null, Object.assign({}, data, { meta }));
-  //   }
-  // });
 };
