@@ -24,7 +24,7 @@ function determineIntegrationTestStackName(cb) {
     yjpa7145: 'mth-2',
     'Matt Savoie': 'mhs',
     'Jonathan Kovarik': 'jk',
-    'Menno Van Diermen': 'mvd',
+    'Menno Van Diermen': 'mvd-dev',
     ifestus: 'jc'
   };
 
