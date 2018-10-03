@@ -365,6 +365,8 @@ mvd:
       name: '{{stackName}}-internal'
       type: internal
   bucket: '{{stackName}}-internal'
+  es:
+    elasticSearchMapping: 23
 
 mvd-dev:
   stackName: mvd-dev
