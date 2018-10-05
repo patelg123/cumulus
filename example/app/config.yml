@@ -376,9 +376,9 @@ mvd-dev:
   stackNameNoDash: mvdDev
   buckets:
     internal:
-      name: '{{stackName}}-internal'
+      name: 'mvd-internal'
       type: internal
-  bucket: '{{stackName}}-internal'
+  bucket: 'mvd-internal'
 
 jc:
   stackName: jc
