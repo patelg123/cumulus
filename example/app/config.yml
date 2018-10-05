@@ -119,6 +119,9 @@ default:
       name: cumulus-data-shared
       type: shared
 
+  es:
+    elasticSearchMapping: 574
+
   cmr:
     username: '{{CMR_USERNAME}}'
     provider: CUMULUS
