@@ -309,6 +309,72 @@ async function getExecutionStatus({ prefix, arn }) {
   return JSON.parse(payload.body);
 }
 
+/**
+ * Fetch a list of providers from the Cumulus API
+ *
+ * @param {Object} params - params
+ * @param {string} params.prefix - the prefix configured for the stack
+ * @returns {Promise<Object>} - the list of providers fetched by the API
+ */
+async function getProviders({ prefix }) {
+  const payload = await callCumulusApi({
+    prefix: prefix,
+    functionName: 'ApiProvidersDefault',
+    payload: {
+      httpMethod: 'GET',
+      resource: '/providers',
+      path: '/providers',
+      pathParameters: {}
+    }
+  });
+
+  return JSON.parse(payload.body);
+}
+
+/**
+ * Fetch a list of collections from the Cumulus API
+ *
+ * @param {Object} params - params
+ * @param {string} params.prefix - the prefix configured for the stack
+ * @returns {Promise<Object>} - the list of collections fetched by the API
+ */
+async function getCollections({ prefix }) {
+  const payload = await callCumulusApi({
+    prefix: prefix,
+    functionName: 'ApiCollectionsDefault',
+    payload: {
+      httpMethod: 'GET',
+      resource: '/collections',
+      path: '/collections',
+      pathParameters: {}
+    }
+  });
+
+  return JSON.parse(payload.body);
+}
+
+/**
+ * Fetch a list of workflows from the Cumulus API
+ *
+ * @param {Object} params - params
+ * @param {string} params.prefix - the prefix configured for the stack
+ * @returns {Promise<Object>} - the list of workflows fetched by the API
+ */
+async function getWorkflows({ prefix }) {
+  const payload = await callCumulusApi({
+    prefix: prefix,
+    functionName: 'ApiWorkflowsDefault',
+    payload: {
+      httpMethod: 'GET',
+      resource: '/workflows',
+      path: '/workflows',
+      pathParameters: {}
+    }
+  });
+
+  return JSON.parse(payload.body);
+}
+
 module.exports = {
   callCumulusApi,
   getGranule,
@@ -320,5 +386,8 @@ module.exports = {
   getExecution,
   getLogs,
   getExecutionLogs,
-  getExecutionStatus
+  getExecutionStatus,
+  getProviders,
+  getCollections,
+  getWorkflows
 };
