@@ -239,4 +239,31 @@ describe('The Cumulus API', () => {
       });
     });
   });
+
+  describe('collections endpoint', () => {
+    it('returns a list of collections', async () => {
+      const collections = await apiTestUtils.getCollections({ prefix: config.stackName });
+      expect(collections).not.toBe(undefined);
+
+      console.log('collections', collections);
+    })
+  });
+
+  describe('providers endpoint', () => {
+    it('returns a list of providers', async () => {
+      const providers = await apiTestUtils.getProviders({ prefix: config.stackName });
+      expect(providers).not.toBe(undefined);
+
+      console.log('providers', providers);
+    })
+  });
+
+  describe('workflows endpoint', () => {
+    it('returns a list of workflows', async () => {
+      const workflows = await apiTestUtils.getWorkflows({ prefix: config.stackName });
+      expect(workflows).not.toBe(undefined);
+
+      console.log('workflows', workflows);
+    })
+  });
 });
