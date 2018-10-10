@@ -78,13 +78,23 @@ const sampleGranule = {
  * @returns {boolean} true if the concept exists in CMR, false if not
  */
 async function conceptExists(cmrLink) {
+  console.log(`conceptExists Called with ${cmrLink}`);
   const response = await got.get(cmrLink);
 
   if (response.statusCode !== 200) {
+    console.log(`cmrLink failed status: ${response.statusCode}`);
     return false;
   }
 
   const body = JSON.parse(response.body);
+  try {
+    if (body.feed.entry) {
+      console.log('CE entry:', body.feed.entry);
+    }
+  }
+  catch (e) {
+
+  }
 
   return body.feed.entry.length > 0;
 }
