@@ -388,6 +388,11 @@ mhs3:
   stackName: mhs3
   stackNameNoDash: mhs3
 
+testit:
+  stackName: testit
+  stackNameNoDash: testit
+
+
 jk:
   stackName: jk
   stackNameNoDash: jk
