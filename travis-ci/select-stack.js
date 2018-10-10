@@ -22,7 +22,7 @@ function determineIntegrationTestStackName(cb) {
     laurenfrederick: 'lf',
     'Mark Boyd': 'mboyd-int',
     yjpa7145: 'mth-2',
-    'Matt Savoie': 'mhs',
+    'Matt Savoie': 'testit',
     'Jonathan Kovarik': 'jk',
     'Menno Van Diermen': 'mvd',
     'Jacob Campbell': 'jc'
