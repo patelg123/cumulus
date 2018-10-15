@@ -97,3 +97,45 @@ test('downloadS3File resolves filepath if key is found', async (t) => {
 
   t.is(result, Body);
 });
+
+// exports.createS3Bucket = (bucketName) =>
+//   exports.s3().createBucket({ Bucket: bucketName }).promise();
+
+// exports.createBuckets = (bucketNames) =>
+//   Promise.all(bucketNames.map(exports.createS3Bucket));
+
+test('createS3Bucket creates an S3 bucket', async (t) => {
+  const bucketName = randomString();
+
+  try {
+    await aws.createS3Bucket(bucketName);
+
+    const listBucketsResponse = await aws.s3().listBuckets().promise();
+    const bucketNames = listBucketsResponse.Buckets.map((bucket) => bucket.Name);
+
+    t.true(bucketNames.includes(bucketName));
+  }
+  finally {
+    await aws.s3().deleteBucket({ Bucket: bucketName }).promise();
+  }
+});
+
+test('createS3Buckets creates S3 buckets', async (t) => {
+  const bucketNames = [randomString(), randomString()];
+
+  try {
+    await aws.createS3Buckets(bucketNames);
+
+    const listBucketsResponse = await aws.s3().listBuckets().promise();
+    const allBucketNames = listBucketsResponse.Buckets.map((bucket) => bucket.Name);
+
+    t.true(allBucketNames.includes(bucketNames[0]));
+    t.true(allBucketNames.includes(bucketNames[1]));
+  }
+  finally {
+    await Promise.all([
+      aws.s3().deleteBucket({ Bucket: bucketNames[0] }).promise(),
+      aws.s3().deleteBucket({ Bucket: bucketNames[1] }).promise()
+    ]);
+  }
+});

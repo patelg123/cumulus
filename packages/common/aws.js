@@ -784,3 +784,21 @@ exports.setGranuleStatus = async (
   params.Metadata = { executionArn, status };
   await exports.s3().putObject(params).promise();
 };
+
+/**
+ * Create an S3 bucket
+ *
+ * @param {string} bucketName - the name of the bucket to create
+ * @returns {Promise} resolves when the bucket has been created
+ */
+exports.createS3Bucket = (bucketName) =>
+  exports.s3().createBucket({ Bucket: bucketName }).promise();
+
+/**
+ * Create S3 buckets
+ *
+ * @param {Array<string>} bucketNames - the names of the buckets to create
+ * @returns {Promise} resolves when the buckets have been created
+ */
+exports.createS3Buckets = (bucketNames) =>
+  Promise.all(bucketNames.map(exports.createS3Bucket));
