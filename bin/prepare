@@ -1,13 +1,13 @@
 #!/bin/bash
 
-set -e
+set -eo pipefail
 
 # this script will link the packages specified in the npm to the ones in the cumulus repo
 cd example
 mkdir -p .tmp
 
 # install non cumulus packages
-cat package.json | jq '.dependencies, .devDependencies | to_entries[] | select(.key | startswith("@cumulus") | not) | .key + "@" + .value' | xargs npm install --no-save
+cat package.json | jqx '.dependencies, .devDependencies | to_entries[] | select(.key | startswith("@cumulus") | not) | .key + "@" + .value' | xargs npm install --no-save
 
 cat package.json | jq '.dependencies | to_entries[] | select(.key | startswith("@cumulus")).key' > .tmp/cumulus_integration_tests_packages.txt
 cd ..
